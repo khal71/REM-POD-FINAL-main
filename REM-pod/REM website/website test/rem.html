@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/axios/0.21.1/axios.js"></script>
+    <script src="https://unpkg.com/vue@next"></script>
+    <link rel="stylesheet" href="REM.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+    <title>REM</title>
+    <style>
+      body {
+        background-image: url("3d-cute-ghost-purple-background_407989-37.jpg");
+        background-repeat: no-repeat;
+        background-attachment: fixed;  
+        background-size: cover;
+      }
+      </style>
+</head>
+<body>
+
+  <header>
+    <nav class="navbar navbar-expand-sm bg-dark navbar-dark nav" >
+<div class="container-fluid">
+         <img class="logo" src="../Ghostbusters-logo-CC20C1F0CE-seeklogo.com.png" >
+  <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+    <span class="navbar-toggler-icon"></span>
+  </button>
+  <div class="collapse navbar-collapse" id="collapsibleNavbar">
+    <ul class="navbar-nav">
+   
+    <li class="nav-item">
+    <a class="nav-link"  asp-page="/AboutUs">About Us</a>
+    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/logIn">Log in</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/LogOut">Log out</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-page="/Map/Map">Our location</a>
+                    </li>
+  </ul>
+</div>
+</div>
+</nav>
+</header>
+
+<div class="row">
+  <div class="col">
+    <h1>REM-POD</h1>
+    <div id="weather-info">
+      <p>Weather Today</p>
+      <p>Temperature: ${temperature}°C</p>
+      <p>Description: ${weatherDescription}</p>
+    </div> 
+  </div>
+</div>
+
+    <div id="app">
+      <div>
+        <div>
+          <main class="table">
+            <section class="table__header">
+              <button id="getAllButton" @click="getAll" class="btn btn-dark">List of Data</button>
+            </section>
+            <section class="table__body">
+            <table>
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Timestamp</th>
+                  <th>Temperature</th>
+                  <th>Magnetometer</th>
+                  <th>Distance</th>
+                  <th>Delete</th>
+                  <th>Favorites</th>
+
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="mål in målinger" :key="mål.id">
+                  <td>{{ mål.id }}</td>
+                  <td>{{ mål.timeStamp }}</td>
+                  <td>{{ mål.temperature }}</td>
+                  <td>{{ mål.magnetometer }}</td>
+                  <td>{{ mål.distance }}</td>
+                  <td>
+                    <i class="fa fa-trash" @click="deleteMåling(mål.id)"></i>
+                  </td>
+                  <td>
+                    <i class="far fa-star" @click="addToFavorites(mål)"></i>
+                  </td>
+                </tr>
+
+
+              </tbody>
+            </table>
+            <div v-else>No Målinger</div>
+          </section>
+          </main>
+        </br>
+        <main class="ftable">
+          <section class="table__header">
+            <button id="getAllButton"  class="btn btn-dark">List of Favorites</button>
+          </section>
+          <section class="table__body">
+          <table>
+            <thead>
+              <tr>
+                <th>ID</th>
+                <th>Timestamp</th>
+                <th>Temperature</th>
+                <th>Magnetometer</th>
+                <th>Distance</th>
+                <th>Delete</th>
+                
+                <th>Favorites</th>
+
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="favorite in favorites" :key="favorite.id">
+                <td>{{ favorite.id }}</td>
+                <td>{{ favorite.timeStamp }}</td>
+                <td>{{ favorite.temperature }}</td>
+                <td>{{ favorite.magnetometer }}</td>
+                <td>{{ favorite.distance }}</td>
+                <td>
+                  <i class="fa fa-trash" @click="deleteMåling(mål.id)"></i>
+                </td>
+                
+                <td>
+                  <i class="far fa-star" @click="removeFromFavorites(favorite)"></i>
+                </td>
+              </tr>
+
+
+            </tbody>
+          </table>
+          
+        </section>
+        </main>
+
+          
+
+
+        <div class="kcontainer">
+          <form @submit.prevent="getById" class="search-bar">
+            <input v-model.number="idToGetBy" type="text" placeholder="Search for Id" >
+            <button @click="getById(idToGetBy)" class="far fa-search"></button>
+          </form>
+          <br>
+          <br>
+        
+        
+          <table class="stable" v-if="singleMåling">
+            <tr>
+              <th>ID</th>
+              <th>Timestamp</th>
+              <th>Temperature</th>
+              <th>Magnetometer</th>
+              <th>Distance</th>
+            </tr>
+            <tr>
+              <td>{{ singleMåling.id }}</td>
+              <td>{{ singleMåling.timeStamp }}</td>
+              <td>{{ singleMåling.temperature }}</td>
+              <td>{{ singleMåling.magnetometer }}</td>
+              <td>{{ singleMåling.distance }}</td>
+            </tr>
+          </table>
+        </div>
+      </br>
+      
+<!--
+        <h2>Add (POST)</h2>
+        <input v-model.number="addData.temperature" placeholder="Temperature" type="number">
+        <input v-model.number="addData.magnetometer" placeholder="Magnometer" type="number">
+        <input v-model.number="addData.distance" placeholder="Distance" type="number">
+        <button @click="addMåling()" class="btn btn-success">Add</button>
+        <div>{{ addMessage }}</div>
+
+        <h2>Delete (DELETE)</h2>
+        <input v-model.number="deleteId" placeholder="id" type="number">
+        <button @click="deleteMåling(deleteId)" class="btn btn-warning">Delete</button>
+        {{deleteMessage}}
+
+        <br>
+        <br>
+-->
+<!--
+                <h2>Filter by Timestamp Range</h2>
+        <label for="startTimestamp">Start Timestamp:</label>
+        <input v-model="startTimestamp" type="datetime-local" id="startTimestamp">
+
+        <label for="endTimestamp">End Timestamp:</label>
+        <input v-model="endTimestamp" type="datetime-local" id="endTimestamp">
+
+        <button @click="getByTimestampRange()" class="btn btn-success">Get by Timestamp Range</button>
+
+        <ul id="filteredMålinger" v-if="filteredMålinger.length">
+            <li v-for="mål in filteredMålinger" :key="mål.id">
+                Id:{{ mål.id }} Dato:{{ mål.timeStamp }} : Temperature:{{ mål.temperature }} : Magnetometer:{{ mål.magnetometer }} : Afstand:{{ mål.distance }}
+            </li>
+        </ul>
+        <div v-else>No readings in the specified timestamp range</div>
+      -->
+      <h2>Filter by Timestamp Range</h2>
+      <div class="kcontainer">
+  <label for="startTimestamp"class="sheader">Start Timestamp:</label>
+  <input v-model="startTimestamp" type="datetime-local" id="startTimestamp">
+
+  <label for="endTimestamp" class="sheader">End Timestamp:</label>
+  <input v-model="endTimestamp" type="datetime-local" id="endTimestamp">
+
+  <button @click="getByTimestampRange()" class="btn btn-dark">Get by Timestamp Range</button>
+
+  <table class="stable" id="filteredMålinger" v-if="filteredMålinger.length">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Dato</th>
+        <th>Temperature</th>
+        <th>Magnetometer</th>
+        <th>Afstand</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="mål in filteredMålinger" :key="mål.id">
+        <td>{{ mål.id }}</td>
+        <td>{{ mål.timeStamp }}</td>
+        <td>{{ mål.temperature }}</td>
+        <td>{{ mål.magnetometer }}</td>
+        <td>{{ mål.distance }}</td>
+      </tr>
+    </tbody>
+  </table>
+      </div>
+
+</br>
+        
+<div class="kcontainer">
+  <h2>Filter by Temperature Spikes</h2>
+  <label for="temperatureThreshold" class="sheader">Temperature Threshold:</label>
+  <input v-model.number="temperatureThreshold" type="number" id="temperatureThreshold">
+
+  <button @click="getTemperatureSpikes()" class="btn btn-danger">Get Temperature Spikes</button>
+
+  <table class="stable">
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Temperature Spike</th>
+        <th>Timestamp</th>
+        <th>Magnetometer</th>
+        <th>Distance</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="spike in temperatureSpikes" :key="spike.id">
+        <td>{{ spike.id }}</td>
+        <td>{{ spike.temperature }}</td>
+        <td>{{ spike.timeStamp }}</td>
+        <td>{{ spike.magnetometer }}</td>
+        <td>{{ spike.distance }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p class="line">Total Temperature Spikes: {{ temperatureSpikesCount }}</p>
+
+ 
+
+  
+</div>
+
+              <!--         <h2>Filter by Temperature Spikes</h2>
+            <label for="temperatureThreshold">Temperature Threshold:</label>
+            <input v-model.number="temperatureThreshold" type="number" id="temperatureThreshold">
+
+            <button @click="getTemperatureSpikes()" class="btn btn-danger">Get Temperature Spikes</button>
+
+            <p>Total Temperature Spikes: {{ temperatureSpikesCount }}</p>
+            <ul v-if="temperatureSpikesCount">
+                <li v-for="spike in temperatureSpikes" :key="spike.id">
+                    Id: {{ spike.id }} - Temperature Spike: {{ spike.temperature }} at {{ spike.timeStamp }} - Magnetometer: {{ spike.magnetometer }} - Distance: {{ spike.distance }}
+                </li>
+            </ul>
+            <div v-else>No Temperature Spikes were detected in the specified threshold</div>
+          -->
+          <!--
+        <div id="weather-info">
+          <p>Temperature: ${temperature}°C</p>
+          <p>Description: ${weatherDescription}</p>
+        </div>
+        -->
+    </div>
+
+      </div>
+  <script>
+    const apiKey = '16ec246d47551f970f20235e4fff8f46'; 
+    const town = 'Roskilde, DK'; 
+
+    const apiUrl = `https://api.openweathermap.org/data/2.5/weather?q=${town}&appid=${apiKey}&units=metric`;
+
+    fetch(apiUrl)
+      .then(response => response.json())
+      .then(data => {
+        console.log(data);
+        const weatherInfo = document.getElementById('weather-info');
+        const { main, weather } = data;
+
+        const temperature = main.temp;
+        const weatherDescription = weather[0].description;
+
+        weatherInfo.innerHTML = `
+          <p> Weather Today</p>
+          <p>Temperature: ${temperature}°C</p>
+          <p>Description: ${weatherDescription}</p>
+        `;
+      })
+      .catch(error => {
+        console.log('Error fetching weather data:', error);
+      });
+  </script>
+
+
+   
+    <script src="js/rem.js"></script>
+
+
+
+</body>
+</html>
